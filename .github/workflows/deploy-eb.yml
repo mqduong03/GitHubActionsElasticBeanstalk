@@ -1,0 +1,32 @@
+name: Deploy to Elastic Beanstalk
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    permissions:
+      id-token: write
+      contents: read
+    
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::177602935539:role/GitHubActionsRole
+          aws-region: us-east-1
+      
+      - name: Create application version
+        run: |
+          aws elasticbeanstalk create-application-version \
+            --application-name GitHubActionsElasticBeanstalkApp \
+            --version-label v1.0.1 \
+            --source-bundle S3Bucket="elasticbeanstalk-us-east-1-177602935539",S3Key="GitHubActionsElasticBeanstalk/app-v1.0.0.zip"
+      
+      - name: Update environment
+        run: |
+          aws elasticbeanstalk update-environment \
+            --environment-name GitHubActionsElasticBeanstalkEnv \
+            --version-label v1.0.1
